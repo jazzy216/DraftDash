@@ -1,686 +1,823 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>War Room — 2026 Superflex</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&display=swap" rel="stylesheet">
 <style>
-:root{
-  --ground:#122528;
-  --panel:#183237;
-  --panel-2:#1E3E44;
-  --edge:#2A565E;
-  --bone:#F2EDE3;
-  --bone-dim:#A8B8B7;
-  --qb:#F2B33D;
-  --rb:#6FCF97;
-  --wr:#7FB4E8;
-  --te:#C79BE0;
-  --gone:#5A6E70;
-  --alert:#FF7A5C;
-  --radius:6px;
-}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;padding:0}
-body{
-  background:var(--ground);
-  color:var(--bone);
-  font-family:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;
-  font-size:16px;line-height:1.4;
-  padding-bottom:calc(64px + env(safe-area-inset-bottom));
-  -webkit-font-smoothing:antialiased;
-}
-button{font-family:inherit;color:inherit;border:none;background:none;cursor:pointer;font-size:inherit}
-input,select{font-family:inherit;font-size:16px}
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Archivo:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
-/* ---------- status strip ---------- */
-#clock{
-  position:sticky;top:0;z-index:40;
-  background:var(--panel);
-  border-bottom:2px solid var(--edge);
-  padding:10px 14px calc(10px + env(safe-area-inset-top)) 14px;
-  padding-top:calc(10px + env(safe-area-inset-top));
+:root {
+  --ink: #14171a;
+  --paper: #e8eae5;
+  --raised: #f4f5f1;
+  --rule: #c6c9c0;
+  --muted: #6b7069;
+  --pitch: #1f4d3a;
+  --flag: #b4471f;
+  --amber: #8a6a12;
+  --display: 'Barlow Condensed', system-ui, sans-serif;
+  --body: 'Archivo', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
 }
-.clock-row{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
-.clock-main{font-weight:800;font-size:19px;letter-spacing:-.3px}
-.clock-sub{font-size:13px;color:var(--bone-dim)}
-#directive{
-  margin-top:8px;font-size:14px;font-weight:600;
-  border-left:3px solid var(--qb);padding-left:10px;line-height:1.35;
-}
-#directive.calm{border-left-color:var(--edge);font-weight:500;color:var(--bone-dim)}
-#directive.urgent{border-left-color:var(--alert);color:#FFD9CE}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ---------- filters ---------- */
-#filters{
-  display:flex;gap:6px;padding:10px 14px;overflow-x:auto;
-  background:var(--ground);position:sticky;z-index:30;
-  border-bottom:1px solid var(--edge);
-}
-#filters::-webkit-scrollbar{display:none}
-.chip{
-  padding:6px 13px;border:1px solid var(--edge);border-radius:20px;
-  font-size:14px;font-weight:600;white-space:nowrap;color:var(--bone-dim);
-}
-.chip.on{background:var(--bone);color:var(--ground);border-color:var(--bone)}
+.wr { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 15px;
+      line-height: 1.5; min-height: 100dvh; padding-bottom: 64px; -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px; }
 
-/* ---------- player rows ---------- */
-.tierhead{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:16px 14px 6px 14px;
-  font-size:13px;font-weight:600;color:var(--bone-dim);
-  border-bottom:1px solid var(--edge);margin-bottom:2px;
-}
-.tierhead b{color:var(--bone);font-weight:800}
-.row{
-  display:flex;align-items:center;gap:10px;
-  padding:11px 14px;border-bottom:1px solid rgba(42,86,94,.45);
-  position:relative;
-}
-.row .rank{
-  width:26px;flex:0 0 26px;text-align:right;
-  font-size:13px;color:var(--bone-dim);font-variant-numeric:tabular-nums;
-}
-.row .body{flex:1;min-width:0}
-.row .nm{font-weight:600;font-size:16px;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.row .meta{font-size:12px;color:var(--bone-dim);margin-top:1px}
-.pos{
-  flex:0 0 auto;font-size:12px;font-weight:800;padding:3px 7px;border-radius:4px;
-  color:var(--ground);letter-spacing:.2px;
-}
-.pos.QB{background:var(--qb)}.pos.RB{background:var(--rb)}
-.pos.WR{background:var(--wr)}.pos.TE{background:var(--te)}
-.pos.NA{background:var(--gone)}
-.row.taken{opacity:.32}
-.row.taken .nm{text-decoration:line-through}
-.row.mine{background:linear-gradient(90deg,rgba(242,179,61,.16),transparent 70%)}
-.row.mine::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--qb)}
-.flag{font-size:11px;font-weight:700;color:var(--alert);margin-left:6px}
-.note{font-size:12.5px;color:var(--bone-dim);padding:0 14px 11px 50px;margin-top:-6px;border-bottom:1px solid rgba(42,86,94,.45)}
+/* masthead */
+.mast { border-bottom: 2px solid var(--ink); padding: 26px 0 12px;
+        display: grid; grid-template-columns: 1fr; gap: 12px; }
+@media (min-width: 800px) { .mast { grid-template-columns: auto 1fr auto; align-items: end; } }
+.mast h1 { font-family: var(--display); font-size: 50px; font-weight: 700; letter-spacing: -0.02em;
+           line-height: 0.85; text-transform: uppercase; }
+.mast h1 span { display: block; color: var(--pitch); }
+.mast-meta { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em;
+             text-transform: uppercase; color: var(--muted); }
+.mast-week { font-family: var(--display); font-size: 14px; font-weight: 600; letter-spacing: 0.12em;
+             text-transform: uppercase; text-align: left; }
+@media (min-width: 800px) { .mast-week { text-align: right; } }
+.mast-week b { display: block; font-family: var(--mono); font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
 
-/* ---------- sheet ---------- */
-#sheet{
-  position:fixed;inset:0;z-index:80;display:none;
-  background:rgba(8,18,20,.72);align-items:flex-end;
-}
-#sheet.open{display:flex}
-.sheet-card{
-  width:100%;background:var(--panel);border-top:2px solid var(--edge);
-  border-radius:14px 14px 0 0;padding:18px 16px calc(20px + env(safe-area-inset-bottom));
-}
-.sheet-card h3{margin:0 0 2px;font-size:20px;font-weight:800;letter-spacing:-.3px}
-.sheet-card .sub{font-size:13px;color:var(--bone-dim);margin-bottom:14px}
-.act{
-  display:block;width:100%;text-align:left;padding:14px;margin-bottom:8px;
-  background:var(--panel-2);border:1px solid var(--edge);border-radius:var(--radius);
-  font-weight:600;font-size:15px;
-}
-.act.primary{background:var(--qb);color:var(--ground);border-color:var(--qb)}
-.act.ghost{background:none;color:var(--bone-dim);text-align:center;font-weight:500}
+/* tabs */
+.tabs { display: flex; gap: 0; border-bottom: 1px solid var(--rule); overflow-x: auto; }
+.tab { font-family: var(--display); font-size: 16px; font-weight: 600; letter-spacing: 0.09em;
+       text-transform: uppercase; padding: 13px 18px 11px; border: none; background: none;
+       color: var(--muted); cursor: pointer; border-bottom: 3px solid transparent;
+       white-space: nowrap; transition: color 120ms ease; }
+.tab:hover { color: var(--ink); background: none; }
+.tab.on { color: var(--ink); border-bottom-color: var(--pitch); }
+.tab .dot { display: inline-block; width: 6px; height: 6px; background: var(--flag);
+            border-radius: 50%; vertical-align: 3px; margin-left: 6px; }
 
-/* ---------- panels / generic ---------- */
-.pane{display:none;padding:0 0 30px}
-.pane.on{display:block}
-.block{padding:16px 14px;border-bottom:1px solid var(--edge)}
-.block h2{margin:0 0 4px;font-size:17px;font-weight:800;letter-spacing:-.2px}
-.block p{margin:0 0 10px;font-size:14px;color:var(--bone-dim);line-height:1.45}
-.field{display:flex;gap:8px;align-items:center;margin-bottom:10px}
-.field label{font-size:13px;color:var(--bone-dim);flex:0 0 92px}
-.field input,.field select{
-  flex:1;background:var(--ground);border:1px solid var(--edge);color:var(--bone);
-  padding:10px;border-radius:var(--radius);min-width:0;
-}
-.btn{
-  display:inline-block;padding:11px 16px;background:var(--panel-2);
-  border:1px solid var(--edge);border-radius:var(--radius);font-weight:600;font-size:14px;
-}
-.btn.solid{background:var(--bone);color:var(--ground);border-color:var(--bone)}
-.btn.wide{display:block;width:100%;text-align:center}
-.pill{display:inline-block;font-size:12px;padding:2px 8px;border:1px solid var(--edge);border-radius:20px;color:var(--bone-dim);margin:0 4px 4px 0}
-.slot{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(42,86,94,.45)}
-.slot .lbl{flex:0 0 78px;font-size:12px;font-weight:700;color:var(--bone-dim)}
-.slot .val{flex:1;font-weight:600}
-.slot .val.empty{color:var(--gone);font-weight:400;font-style:italic}
-.gauge{height:6px;background:var(--panel-2);border-radius:3px;overflow:hidden;margin:8px 0 4px}
-.gauge i{display:block;height:100%;background:var(--qb)}
-.mini{font-size:12px;color:var(--bone-dim)}
-.status{font-size:13px;color:var(--bone-dim);margin-top:8px;min-height:18px}
-.status.err{color:var(--alert)}
-ul.tips{margin:0;padding-left:18px;font-size:14px;color:var(--bone-dim);line-height:1.55}
-ul.tips li{margin-bottom:7px}
-ul.tips b{color:var(--bone);font-weight:600}
-textarea{
-  width:100%;background:var(--ground);border:1px solid var(--edge);color:var(--bone);
-  border-radius:var(--radius);padding:10px;font-family:inherit;font-size:15px;min-height:90px;
-}
+/* generic */
+.eyebrow { font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: 0.16em;
+           text-transform: uppercase; color: var(--muted); display: flex; align-items: center;
+           gap: 10px; margin-bottom: 14px; }
+.eyebrow::after { content: ''; flex: 1; height: 1px; background: var(--rule); }
+.sect { padding-top: 34px; }
+.cols { display: grid; grid-template-columns: 1fr; gap: 36px; }
+@media (min-width: 900px) { .cols { grid-template-columns: 1.3fr 1fr; gap: 48px; } }
 
-/* ---------- tabs ---------- */
-#tabs{
-  position:fixed;bottom:0;left:0;right:0;z-index:60;display:flex;
-  background:var(--panel);border-top:2px solid var(--edge);
-  padding-bottom:env(safe-area-inset-bottom);
-}
-#tabs button{flex:1;padding:14px 4px;font-size:13px;font-weight:700;color:var(--bone-dim)}
-#tabs button.on{color:var(--bone);box-shadow:inset 0 3px 0 var(--qb)}
-:focus-visible{outline:2px solid var(--qb);outline-offset:2px}
-@media (prefers-reduced-motion:no-preference){
-  .row.mine{animation:mark .35s ease-out}
-  @keyframes mark{from{background:rgba(242,179,61,.4)}to{}}
-}
+button { font-family: var(--body); font-size: 14px; font-weight: 600; cursor: pointer;
+         border: 1px solid var(--ink); background: var(--ink); color: var(--paper);
+         padding: 10px 18px; transition: transform 90ms ease, background 140ms ease; }
+button:hover { background: var(--pitch); border-color: var(--pitch); }
+button:active { transform: translateY(1px); }
+button:focus-visible { outline: 2px solid var(--pitch); outline-offset: 2px; }
+button.ghost { background: none; color: var(--ink); }
+button.ghost:hover { background: var(--ink); color: var(--paper); }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+button.small { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.06em; padding: 6px 11px; }
+
+input, textarea { font-family: var(--body); font-size: 15px; color: var(--ink); background: var(--raised);
+                  border: 1px solid var(--rule); padding: 10px 12px; width: 100%; }
+input:focus, textarea:focus { outline: 2px solid var(--pitch); outline-offset: -1px; }
+textarea { min-height: 120px; resize: vertical; line-height: 1.55; }
+label { display: block; font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em;
+        text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.field { margin-bottom: 16px; }
+.help { font-size: 12.5px; color: var(--muted); margin-top: 6px; max-width: 56ch; }
+.err { font-size: 13px; color: var(--flag); border-left: 3px solid var(--flag);
+       padding: 8px 0 8px 12px; margin-top: 14px; background: rgba(180,71,31,0.06); }
+
+/* scoreboard */
+.score { display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: center;
+         border: 1px solid var(--rule); background: var(--raised); padding: 18px 20px; }
+.score-side { min-width: 0; }
+.score-side.away { text-align: right; }
+.score-nm { font-family: var(--display); font-size: 19px; font-weight: 600; line-height: 1.1;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.score-pt { font-family: var(--mono); font-size: 33px; font-weight: 700; letter-spacing: -0.03em; }
+.score-vs { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; color: var(--muted); }
+
+/* alerts */
+.alerts { border-top: 1px solid var(--rule); }
+.alert { display: grid; grid-template-columns: 4px 1fr; gap: 13px; padding: 12px 2px;
+         border-bottom: 1px solid var(--rule); align-items: start; }
+.alert-bar { background: var(--flag); align-self: stretch; }
+.alert.warn .alert-bar { background: var(--amber); }
+.alert.info .alert-bar { background: var(--pitch); }
+.alert-t { font-weight: 600; font-size: 14.5px; }
+.alert-d { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+/* bays */
+.bays { display: grid; grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)); gap: 1px;
+        background: var(--rule); border: 1px solid var(--rule); }
+.bay { background: var(--raised); padding: 12px 13px 14px; min-height: 100px; display: flex;
+       flex-direction: column; justify-content: space-between; position: relative; }
+.bay-tag { font-family: var(--mono); font-size: 9.5px; font-weight: 700; letter-spacing: 0.14em;
+           text-transform: uppercase; color: var(--muted); }
+.bay-name { font-family: var(--display); font-size: 21px; font-weight: 600; line-height: 1.02; }
+.bay-sub { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.03em; margin-top: 3px; }
+.bay.sflex { box-shadow: inset 0 0 0 3px var(--pitch); }
+.bay.sflex .bay-tag { color: var(--pitch); }
+.bay.bad { box-shadow: inset 0 0 0 3px var(--flag); }
+.bay.bad .bay-tag { color: var(--flag); }
+.bay.empty { background: repeating-linear-gradient(-45deg, var(--raised), var(--raised) 6px,
+             var(--paper) 6px, var(--paper) 12px); }
+.bay-flag { position: absolute; top: 10px; right: 11px; font-family: var(--mono); font-size: 9px;
+            font-weight: 700; letter-spacing: 0.08em; color: var(--flag); border: 1px solid var(--flag);
+            padding: 1px 4px; }
+.bay-flag.warn { color: var(--amber); border-color: var(--amber); }
+
+/* rows */
+.rows { border-top: 1px solid var(--rule); }
+.row { display: grid; grid-template-columns: 34px 1fr auto; gap: 12px; align-items: baseline;
+       padding: 10px 2px; border-bottom: 1px solid var(--rule); }
+.row-pos { font-family: var(--mono); font-size: 10px; font-weight: 700; color: var(--muted); }
+.row-pos.QB { color: var(--pitch); }
+.row-name { font-weight: 500; }
+.row-sub { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.03em; margin-top: 2px; }
+.row-right { font-family: var(--mono); font-size: 10.5px; color: var(--muted); text-align: right;
+             letter-spacing: 0.04em; white-space: nowrap; }
+.row-right.live { color: var(--flag); font-weight: 700; }
+.row-right.done { opacity: 0.45; }
+.tagpill { font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: 0.08em;
+           border: 1px solid currentColor; padding: 1px 4px; margin-left: 6px; }
+.t-out { color: var(--flag); }
+.t-q { color: var(--amber); }
+.t-bye { color: var(--flag); }
+
+/* verdict cards */
+.verdicts { display: grid; grid-template-columns: 1fr; gap: 1px; background: var(--rule);
+            border: 1px solid var(--rule); }
+@media (min-width: 640px) { .verdicts { grid-template-columns: repeat(3, 1fr); } }
+.vc { background: var(--raised); padding: 16px 16px 18px; }
+.vc-h { font-family: var(--mono); font-size: 9.5px; font-weight: 700; letter-spacing: 0.14em;
+        text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.vc-n { font-family: var(--display); font-size: 30px; font-weight: 700; line-height: 1; margin-bottom: 6px; }
+.vc-n.hot { color: var(--flag); }
+.vc-n.good { color: var(--pitch); }
+.vc-d { font-size: 13px; color: var(--muted); }
+
+/* schedule day groups */
+.day { margin-bottom: 26px; }
+.day-h { font-family: var(--display); font-size: 17px; font-weight: 600; letter-spacing: 0.08em;
+         text-transform: uppercase; padding-bottom: 6px; border-bottom: 2px solid var(--ink); margin-bottom: 2px; }
+
+/* checks */
+.checks { border-top: 1px solid var(--rule); margin-bottom: 22px; }
+.check { display: flex; gap: 11px; align-items: flex-start; padding: 10px 2px;
+         border-bottom: 1px solid var(--rule); cursor: pointer; }
+.check-box { width: 15px; height: 15px; border: 1.5px solid var(--ink); flex-shrink: 0;
+             margin-top: 3px; position: relative; transition: background 120ms ease; }
+.check.done .check-box { background: var(--pitch); border-color: var(--pitch); }
+.check.done .check-box::after { content: ''; position: absolute; left: 4px; top: 0;
+             width: 4px; height: 9px; border: solid var(--raised); border-width: 0 2px 2px 0;
+             transform: rotate(43deg); }
+.check.done .check-text { color: var(--muted); text-decoration: line-through; }
+.check-text { font-size: 14px; }
+
+.saved { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+         color: var(--pitch); margin-top: 8px; height: 14px; }
+
+/* notify strip */
+.notify { border: 1px solid var(--rule); background: var(--raised); padding: 14px 16px;
+          display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.notify-t { font-size: 13.5px; max-width: 52ch; }
+.notify-t b { font-weight: 600; }
+
+/* connect */
+.connect { display: grid; gap: 40px; padding-top: 46px; grid-template-columns: 1fr; }
+@media (min-width: 860px) { .connect { grid-template-columns: 380px 1fr; gap: 72px; } }
+.connect-aside p { color: var(--muted); font-size: 14px; margin-bottom: 13px; max-width: 46ch; }
+.connect-aside strong { color: var(--ink); }
+.leaguelist { border-top: 1px solid var(--rule); }
+.leaguelist button { border: none; border-bottom: 1px solid var(--rule); background: none;
+       color: var(--ink); text-align: left; padding: 14px 4px; display: flex;
+       justify-content: space-between; align-items: baseline; gap: 12px; width: 100%; }
+.leaguelist button:hover { background: var(--raised); color: var(--ink); }
+.lg-name { font-weight: 600; }
+.lg-fmt { font-family: var(--mono); font-size: 11px; color: var(--muted); text-transform: uppercase; white-space: nowrap; }
+
+/* skeleton */
+.skel { background: linear-gradient(90deg, var(--rule) 0%, var(--raised) 50%, var(--rule) 100%);
+        background-size: 200% 100%; animation: sweep 1.3s ease-in-out infinite; height: 13px; }
+@keyframes sweep { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.skel-row { padding: 12px 2px; border-bottom: 1px solid var(--rule); }
+@media (prefers-reduced-motion: reduce) { .skel { animation: none; } * { transition: none !important; } }
+
+.foot { margin-top: 44px; padding-top: 16px; border-top: 1px solid var(--rule); font-family: var(--mono);
+        font-size: 10.5px; letter-spacing: 0.06em; color: var(--muted); display: flex; gap: 14px;
+        flex-wrap: wrap; align-items: center; }
 </style>
-</head>
-<body>
 
-<div id="clock">
-  <div class="clock-row">
-    <span class="clock-main" id="clockMain">Draft board</span>
-    <span class="clock-sub" id="clockSub">set your slot in Plan</span>
+<div class="wr">
+  <div class="wrap">
+    <header class="mast">
+      <h1>War<span>Room</span></h1>
+      <div class="mast-meta" id="mastMeta">Superflex · Sleeper</div>
+      <div class="mast-week" id="mastWeek">Season<b>&mdash;</b></div>
+    </header>
+    <nav class="tabs" id="tabs" style="display:none"></nav>
+    <main id="stage"></main>
   </div>
-  <div id="directive" class="calm">Tap a player to mark them gone or add them to your team.</div>
 </div>
-
-<!-- ============ BOARD ============ -->
-<section class="pane on" id="pane-board">
-  <div id="filters">
-    <button class="chip on" data-f="ALL">All</button>
-    <button class="chip" data-f="QB">QB</button>
-    <button class="chip" data-f="RB">RB</button>
-    <button class="chip" data-f="WR">WR</button>
-    <button class="chip" data-f="TE">TE</button>
-    <button class="chip" data-f="MINE">My picks</button>
-    <button class="chip on" id="hideTaken">Hide drafted</button>
-  </div>
-  <div id="board"></div>
-  <div class="block">
-    <p>Ranks are a superflex consensus snapshot built Sept 2, 2026. Teams and injury flags come from Sleeper when you sync. Trust your eyes over the number if news breaks.</p>
-    <button class="btn wide" id="undoBtn">Undo last mark</button>
-  </div>
-</section>
-
-<!-- ============ TEAM ============ -->
-<section class="pane" id="pane-team">
-  <div class="block">
-    <h2>Starting lineup</h2>
-    <p>Filled from your draft picks in board order. Superflex takes your second quarterback.</p>
-    <div id="lineup"></div>
-  </div>
-  <div class="block">
-    <h2>Bench</h2>
-    <div id="bench"><p>Nothing yet.</p></div>
-  </div>
-  <div class="block">
-    <h2>Pull your roster from Sleeper</h2>
-    <p>After the draft, enter your username and load the real roster. This overwrites the manual list with what Sleeper actually has, including injury designations.</p>
-    <div class="field"><label for="uname">Username</label><input id="uname" placeholder="sleeper username" autocapitalize="off" autocorrect="off"></div>
-    <div class="field"><label for="leagueSel">League</label><select id="leagueSel"><option>load leagues first</option></select></div>
-    <button class="btn wide solid" id="loadLeagues">Find my leagues</button>
-    <div style="height:8px"></div>
-    <button class="btn wide" id="loadRoster">Load this roster</button>
-    <div class="status" id="syncStatus"></div>
-  </div>
-  <div class="block">
-    <h2>Add a player by name</h2>
-    <p>Searches every player in the NFL. Use this for rookies or anyone missing from the board.</p>
-    <div class="field"><input id="searchBox" placeholder="type a name"></div>
-    <div id="searchResults"></div>
-  </div>
-  <div class="block">
-    <h2>Notes</h2>
-    <textarea id="notes" placeholder="Trade targets, waiver ideas, who owns what."></textarea>
-    <div class="status" id="noteStatus"></div>
-  </div>
-</section>
-
-<!-- ============ PLAN ============ -->
-<section class="pane" id="pane-plan">
-  <div class="block">
-    <h2>Your picks</h2>
-    <div class="field"><label for="teams">Teams</label><input id="teams" type="number" inputmode="numeric" value="12" min="4" max="16"></div>
-    <div class="field"><label for="slot">Draft slot</label><input id="slot" type="number" inputmode="numeric" placeholder="1-12" min="1" max="16"></div>
-    <div id="pickList" class="mini"></div>
-  </div>
-  <div class="block">
-    <h2>Quarterback supply</h2>
-    <div class="gauge"><i id="qbGauge" style="width:100%"></i></div>
-    <div class="mini" id="qbSupply"></div>
-    <p style="margin-top:10px">In a 12-team superflex, 24 starting quarterback slots exist and roughly 20 quarterbacks are startable. That gap is the whole game. Every quarterback that leaves the board makes yours worth more and the next manager more desperate.</p>
-  </div>
-  <div class="block">
-    <h2>How to play the room</h2>
-    <ul class="tips">
-      <li><b>Leave with two you trust.</b> Two real quarterbacks by round six beats a prettier bench every time.</li>
-      <li><b>Watch for runs.</b> Two quarterbacks off the board back to back means a tier is emptying. Jump in rather than wait for the next one.</li>
-      <li><b>Don't chase the third.</b> Once you have two starters, a third quarterback is a luxury unless it costs almost nothing or the value is absurd.</li>
-      <li><b>Josh Allen is the one safe anchor.</b> He is alone in the top tier this year. Everyone else at the position carries a real question.</li>
-      <li><b>The second quarterback tier is six deep.</b> Maye, Jackson, Daniels, Hurts, Burrow, Williams. If you miss all six, Herbert, Prescott, Goff and Stafford still start for you.</li>
-      <li><b>Handcuffs wait.</b> Two quarterback slots eat bench space. Backup running backs are a last-three-rounds problem.</li>
-    </ul>
-  </div>
-  <div class="block">
-    <h2>Reset</h2>
-    <p>Clears every mark on the board and your drafted list. Your Sleeper roster and notes stay.</p>
-    <button class="btn wide" id="resetBtn">Clear the board</button>
-  </div>
-</section>
-
-<div id="tabs">
-  <button class="on" data-p="board">Board</button>
-  <button data-p="team">My team</button>
-  <button data-p="plan">Plan</button>
-</div>
-
-<div id="sheet"><div class="sheet-card">
-  <h3 id="sheetName"></h3>
-  <div class="sub" id="sheetSub"></div>
-  <button class="act primary" id="actMine">I drafted them</button>
-  <button class="act" id="actTaken">Someone else took them</button>
-  <button class="act" id="actClear">Put back on the board</button>
-  <button class="act ghost" id="actCancel">Cancel</button>
-</div></div>
 
 <script>
-/* ---------------- data ---------------- */
-const TIERS = {
-  1:"Tier 1 — franchise anchors",
-  2:"Tier 2 — elite QB run + stud skill",
-  3:"Tier 3 — the last starting QBs worth reaching for",
-  4:"Tier 4 — high-end skill, streaming QBs begin",
-  5:"Tier 5 — depth, upside swings",
-  6:"Tier 6 — late value and tight ends"
-};
-const BOARD = [
- [1,"Josh Allen","QB","BUF",1,"Alone in the top tier. Four QB1 finishes since 2019, and the rushing floor is why."],
- [2,"Jahmyr Gibbs","RB","DET",1,"RB3 in points per game last year, then took over the passing work down the stretch."],
- [3,"Bijan Robinson","RB","ATL",1,"Back-to-back RB4 and RB3 finishes. Led all backs in yards per route run."],
- [4,"Ja'Marr Chase","WR","CIN",1,"Over 30% target share. The whole bet is Burrow staying upright."],
- [5,"Puka Nacua","WR","LAR",1,"Highest receiving yards per game in NFL history over a career. No duds in 2025."],
- [6,"Drake Maye","QB","NE",2,"Only Allen outscored him last year. Now throws to A.J. Brown."],
- [7,"Lamar Jackson","QB","BAL",2,"Two of the best fantasy QB seasons ever. Last year was injury, not decline."],
- [8,"Jayden Daniels","QB","WAS",2,"Averaged over 20 a game as a rookie. Lost 2025 to injuries, new system fits him."],
- [9,"Jalen Hurts","QB","PHI",2,"Top-seven in points per game five years running even in a down year."],
- [10,"Joe Burrow","QB","CIN",2,"21.9 a game when healthy. He has missed seven-plus games in two of three years."],
- [11,"Jaxon Smith-Njigba","WR","SEA",2,"Led the league in receiving yards. Seattle should throw more, not less."],
- [12,"Jonathan Taylor","RB","IND",2,"Led the NFL in touchdowns again. Contract year."],
- [13,"Caleb Williams","QB","CHI",2,"Tied for eighth in points per game. Year two under Ben Johnson."],
- [14,"Amon-Ra St. Brown","WR","DET",2,""],
- [15,"Christian McCaffrey","RB","SF",2,""],
- [16,"CeeDee Lamb","WR","DAL",2,""],
- [17,"Justin Herbert","QB","LAC",3,"The best of the fallback tier. Perfectly fine as your second starter."],
- [18,"Dak Prescott","QB","DAL",3,"Tied for eighth in points per game with the offense returning intact."],
- [19,"Derrick Henry","RB","BAL",3,"Double-digit touchdowns eight straight seasons at 32."],
- [20,"Justin Jefferson","WR","MIN",3,""],
- [21,"Matthew Stafford","QB","LAR",3,"Led the league with 46 touchdown throws. No rushing floor, so expect regression."],
- [22,"Jared Goff","QB","DET",3,"The high-floor one. Roughly 18 a week, almost every week."],
- [23,"Patrick Mahomes","QB","KC",3,""],
- [24,"Malik Nabers","WR","NYG",3,""],
- [25,"Nico Collins","WR","HOU",3,""],
- [26,"De'Von Achane","RB","MIA",3,""],
- [27,"Brian Thomas Jr.","WR","JAX",3,"Watch the shoulder from camp before you lock this in."],
- [28,"Saquon Barkley","RB","PHI",3,""],
- [29,"Trey McBride","TE","ARI",3,"The one tight end worth paying up for."],
- [30,"Bo Nix","QB","DEN",3,"17.9 a game with real rushing weeks. Waddle is a new catch-and-run target."],
- [31,"Trevor Lawrence","QB","JAX",3,"QB1 over the last ten weeks of 2025 once it clicked under Coen."],
- [32,"A.J. Brown","WR","NE",4,""],
- [33,"Drake London","WR","ATL",4,""],
- [34,"Josh Jacobs","RB","GB",4,""],
- [35,"Bucky Irving","RB","TB",4,""],
- [36,"Baker Mayfield","QB","TB",4,""],
- [37,"C.J. Stroud","QB","HOU",4,""],
- [38,"Jordan Love","QB","GB",4,""],
- [39,"Tee Higgins","WR","CIN",4,""],
- [40,"Ladd McConkey","WR","LAC",4,""],
- [41,"James Cook","RB","BUF",4,""],
- [42,"Kyren Williams","RB","LAR",4,""],
- [43,"Tucker Kraft","TE","GB",4,""],
- [44,"Brock Bowers","TE","LV",4,""],
- [45,"Garrett Wilson","WR","NYJ",4,""],
- [46,"Kyler Murray","QB","ARI",4,""],
- [47,"Brock Purdy","QB","SF",4,""],
- [48,"Chase Brown","RB","CIN",4,""],
- [49,"Omarion Hampton","RB","LAC",4,""],
- [50,"Rome Odunze","WR","CHI",4,""],
- [51,"Tetairoa McMillan","WR","CAR",4,""],
- [52,"Tyler Shough","QB","NO",4,""],
- [53,"Michael Penix Jr.","QB","ATL",4,""],
- [54,"Kenneth Walker III","RB","SEA",4,""],
- [55,"Marvin Harrison Jr.","WR","ARI",4,""],
- [56,"Jaylen Waddle","WR","DEN",4,""],
- [57,"Xavier Worthy","WR","KC",4,""],
- [58,"George Kittle","TE","SF",4,""],
- [59,"Emeka Egbuka","WR","TB",5,""],
- [60,"Tua Tagovailoa","QB","MIA",5,"Top-13 at the position each of the last two years despite everything."],
- [61,"J.J. McCarthy","QB","MIN",5,""],
- [62,"Cam Ward","QB","TEN",5,""],
- [63,"TreVeyon Henderson","RB","NE",5,""],
- [64,"Quinshon Judkins","RB","CLE",5,""],
- [65,"Travis Hunter","WR","JAX",5,""],
- [66,"Terry McLaurin","WR","WAS",5,""],
- [67,"D.J. Moore","WR","BUF",5,""],
- [68,"Stefon Diggs","WR","WAS",5,""],
- [69,"Harold Fannin Jr.","TE","CLE",5,""],
- [70,"Sam LaPorta","TE","DET",5,""],
- [71,"Daniel Jones","QB","IND",5,""],
- [72,"Justin Fields","QB","NYJ",5,""],
- [73,"Sam Darnold","QB","SEA",5,""],
- [74,"Ashton Jeanty","RB","LV",5,"Check the injury news before you spend a pick here."],
- [75,"Breece Hall","RB","NYJ",5,""],
- [76,"Zay Flowers","WR","BAL",5,""],
- [77,"Courtland Sutton","WR","DEN",5,""],
- [78,"Jameson Williams","WR","DET",5,""],
- [79,"DeVonta Smith","WR","PHI",5,""],
- [80,"Chris Olave","WR","NO",5,""],
- [81,"Colston Loveland","TE","CHI",5,""],
- [82,"Tyler Warren","TE","IND",5,""],
- [83,"Deshaun Watson","QB","CLE",6,""],
- [84,"Kirk Cousins","QB","ATL",6,""],
- [85,"Isiah Pacheco","RB","DET",6,"Gibbs handcuff. Detroit vacated 161 carries."],
- [86,"Brian Robinson Jr.","RB","ATL",6,""],
- [87,"Kaelon Black","RB","",6,"Rookie who has been climbing draft boards. Verify the role."],
- [88,"Khalil Shakir","WR","BUF",6,""],
- [89,"Ricky Pearsall","WR","SF",6,""],
- [90,"Matthew Golden","WR","GB",6,""],
- [91,"Luther Burden III","WR","CHI",6,""],
- [92,"Jerry Jeudy","WR","CLE",6,""],
- [93,"Romeo Doubs","WR","NE",6,""],
- [94,"T.J. Hockenson","TE","MIN",6,""],
- [95,"David Njoku","TE","CLE",6,""],
- [96,"Dalton Kincaid","TE","BUF",6,""],
- [97,"Mark Andrews","TE","BAL",6,""],
- [98,"Jake Ferguson","TE","DAL",6,""]
-].map(r=>({rank:r[0],name:r[1],pos:r[2],team:r[3],tier:r[4],note:r[5]}));
+const API = 'https://api.sleeper.app/v1';
+const ESPN = 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard';
+const SEASON = '2026';
+const K = { league:'wr:leagueId', uid:'wr:uid', notes:'wr:notes:', checks:'wr:checks:',
+            inj:'wr:injSnap', notify:'wr:notify', trade:'wr:tradeNotes' };
 
-const KEY_DRAFT="wr26:draft", KEY_TEAM="wr26:team";
-let S = { taken:{}, mine:[], teams:12, slot:null, hist:[], filter:"ALL", hideTaken:true };
-let T = { username:"", leagueId:"", roster:[], notes:"" };
-let PLAYERS=null, mem={};
-
-/* ---------------- storage ---------------- */
-async function save(key,val){
-  try{ if(window.storage) await window.storage.set(key, JSON.stringify(val)); }
-  catch(e){ /* fall through */ }
-  mem[key]=val;
-}
-async function load(key){
-  try{ if(window.storage){ const r=await window.storage.get(key); if(r&&r.value) return JSON.parse(r.value);} }
-  catch(e){}
-  return mem[key]||null;
-}
-const saveDraft=()=>save(KEY_DRAFT,S), saveTeam=()=>save(KEY_TEAM,T);
-
-/* ---------------- board ---------------- */
-function statusOf(n){ return S.taken[n]||null; } // "gone" | "mine"
-
-function renderBoard(){
-  const el=document.getElementById("board");
-  let html="", lastTier=null;
-  const list=BOARD.filter(p=>{
-    const st=statusOf(p.name);
-    if(S.filter==="MINE") return st==="mine";
-    if(S.hideTaken && st==="gone") return false;
-    if(S.filter!=="ALL" && p.pos!==S.filter) return false;
-    return true;
-  });
-  if(!list.length) html='<div class="block"><p>Nothing here. Change the filter or turn drafted players back on.</p></div>';
-  list.forEach(p=>{
-    if(p.tier!==lastTier && S.filter!=="MINE"){
-      const left=BOARD.filter(q=>q.tier===p.tier && !statusOf(q.name)).length;
-      html+=`<div class="tierhead"><b>${TIERS[p.tier]}</b><span>${left} left</span></div>`;
-      lastTier=p.tier;
-    }
-    const st=statusOf(p.name);
-    const live=PLAYERS?PLAYERS[p.name.toLowerCase()]:null;
-    const team=(live&&live.team)?live.team:p.team;
-    const inj=(live&&live.injury_status)?`<span class="flag">${live.injury_status}</span>`:"";
-    html+=`<div class="row ${st==="gone"?"taken":""} ${st==="mine"?"mine":""}" data-n="${esc(p.name)}">
-      <span class="rank">${p.rank}</span>
-      <span class="pos ${p.pos}">${p.pos}</span>
-      <span class="body"><span class="nm">${esc(p.name)}${inj}</span>
-      <span class="meta">${team||"free agent"}${st==="mine"?" · yours":""}</span></span>
-    </div>`;
-    if(p.note && !st) html+=`<div class="note">${esc(p.note)}</div>`;
-  });
-  el.innerHTML=html;
-  el.querySelectorAll(".row").forEach(r=>r.onclick=()=>openSheet(r.dataset.n));
-}
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-
-/* ---------------- sheet ---------------- */
-let sheetFor=null;
-function openSheet(name){
-  sheetFor=name;
-  const p=BOARD.find(x=>x.name===name);
-  document.getElementById("sheetName").textContent=name;
-  document.getElementById("sheetSub").textContent=`${p.pos} · overall ${p.rank} · ${TIERS[p.tier].split("—")[1].trim()}`;
-  document.getElementById("sheet").classList.add("open");
-}
-function closeSheet(){ document.getElementById("sheet").classList.remove("open"); sheetFor=null; }
-function mark(name,val){
-  S.hist.push({name,prev:S.taken[name]||null});
-  if(S.hist.length>60) S.hist.shift();
-  if(val) S.taken[name]=val; else delete S.taken[name];
-  S.mine=BOARD.filter(p=>S.taken[p.name]==="mine").map(p=>p.name);
-  saveDraft(); renderBoard(); renderClock(); renderTeam(); renderPlan();
-}
-document.getElementById("actMine").onclick=()=>{mark(sheetFor,"mine");closeSheet();};
-document.getElementById("actTaken").onclick=()=>{mark(sheetFor,"gone");closeSheet();};
-document.getElementById("actClear").onclick=()=>{mark(sheetFor,null);closeSheet();};
-document.getElementById("actCancel").onclick=closeSheet;
-document.getElementById("sheet").onclick=e=>{ if(e.target.id==="sheet") closeSheet(); };
-document.getElementById("undoBtn").onclick=()=>{
-  const h=S.hist.pop(); if(!h) return;
-  if(h.prev) S.taken[h.name]=h.prev; else delete S.taken[h.name];
-  S.mine=BOARD.filter(p=>S.taken[p.name]==="mine").map(p=>p.name);
-  saveDraft(); renderBoard(); renderClock(); renderTeam();
+/* ── Weekly brief ────────────────────────────────────────────────
+   This is the one block that does not update itself. Ask Claude for
+   a refresh each week and this gets rewritten with current reads.  */
+const BRIEF = {
+  week: null,
+  updated: 'not yet written',
+  items: []
 };
 
-/* ---------------- clock + directive ---------------- */
-function myPicks(){
-  if(!S.slot) return [];
-  const n=S.teams,s=S.slot,out=[];
-  for(let r=1;r<=18;r++) out.push(r%2? (r-1)*n+s : r*n-s+1);
+const TEAM_ALIAS = { WAS:'WSH', WSH:'WAS', LA:'LAR', JAC:'JAX', JAX:'JAC' };
+const OUT_CODES = ['Out','IR','PUP','Sus','NA','DNR','COV'];
+const Q_CODES = ['Questionable','Doubtful','Limited Participation In Practice'];
+
+const state = {
+  view:'connect', tab:'week', loading:false, error:null, offline:false,
+  week:null, leagues:[], league:null, rosterPositions:[], starters:[],
+  myPlayers:[], allRosters:[], leagueUsers:[], matchup:null,
+  games:{}, byeTeams:new Set(), scheduleOk:true,
+  injChanges:[], notes:'', checks:{}, tradeNotes:'', notifyState:'default'
+};
+
+const CHECKS = [
+  'Lineup set — every bay filled, nobody on bye',
+  'Checked inactives 90 minutes before the early kickoffs',
+  'Waiver claim in with the FAAB number already decided',
+  'Scanned trending adds for a starter-level injury replacement',
+  'Looked ahead one week for bye holes worth solving now'
+];
+
+/* storage */
+async function sGet(k){ try{ const r=await window.storage.get(k); return r?r.value:null; }catch(e){ return null; } }
+async function sSet(k,v){ try{ await window.storage.set(k,v); return true; }catch(e){ return false; } }
+
+async function api(p){ const r=await fetch(API+p); if(!r.ok) throw new Error('Sleeper returned '+r.status); return r.json(); }
+
+/* player index, trimmed and cached for a day */
+let PLAYERS=null;
+async function loadPlayers(){
+  if(PLAYERS) return PLAYERS;
+  const c=await sGet('wr:players');
+  if(c){ try{ const p=JSON.parse(c); if(p.stamp && Date.now()-p.stamp<86400000){ PLAYERS=p.map; return PLAYERS; } }catch(e){} }
+  const raw=await api('/players/nfl'); const map={};
+  for(const id in raw){ const p=raw[id];
+    if(!p.position||!['QB','RB','WR','TE','K','DEF'].includes(p.position)) continue;
+    map[id]=[p.full_name||((p.first_name||'')+' '+(p.last_name||'')).trim(), p.position, p.team||'FA', p.injury_status||''];
+  }
+  PLAYERS=map; sSet('wr:players', JSON.stringify({stamp:Date.now(), map})); return map;
+}
+
+/* NFL schedule for a week, keyed by team */
+async function loadSchedule(week){
+  const games={}, playing=new Set();
+  try{
+    const r=await fetch(ESPN+'?dates='+SEASON+'&seasontype=2&week='+week);
+    if(!r.ok) throw new Error('schedule '+r.status);
+    const d=await r.json();
+    (d.events||[]).forEach(ev=>{
+      const comp=(ev.competitions&&ev.competitions[0])||{};
+      const cs=comp.competitors||[]; if(cs.length<2) return;
+      const home=cs.find(c=>c.homeAway==='home')||cs[0];
+      const away=cs.find(c=>c.homeAway==='away')||cs[1];
+      const ha=(home.team&&home.team.abbreviation)||'', aa=(away.team&&away.team.abbreviation)||'';
+      const st=(ev.status&&ev.status.type)||{};
+      const info={ kick:new Date(ev.date), state:st.state||'pre', detail:st.shortDetail||'' };
+      games[ha]={...info, opp:aa, home:true};
+      games[aa]={...info, opp:ha, home:false};
+      playing.add(ha); playing.add(aa);
+    });
+    state.scheduleOk=Object.keys(games).length>0;
+  }catch(e){ state.scheduleOk=false; }
+  return { games, playing };
+}
+function gameFor(team){
+  if(!team||team==='FA') return null;
+  return state.games[team] || state.games[TEAM_ALIAS[team]] || null;
+}
+function onBye(team){
+  if(!state.scheduleOk||!team||team==='FA') return false;
+  return !gameFor(team);
+}
+
+/* boot */
+async function boot(){
+  render();
+  try{ const st=await api('/state/nfl'); state.week=st.display_week||st.week||1; }
+  catch(e){ state.offline=true; }
+  state.notifyState=(await sGet(K.notify))||'default';
+  const saved=await sGet(K.league);
+  if(saved && !state.offline){ await openLeague(saved); }
+  else{
+    if(state.offline) state.error='Could not reach Sleeper. Your network or this preview may be blocking the request — try opening the file directly in a browser tab.';
+    render();
+  }
+}
+
+async function findUser(username){
+  state.loading=true; state.error=null; render();
+  try{
+    const user=await api('/user/'+encodeURIComponent(username.trim()));
+    if(!user||!user.user_id) throw new Error('No Sleeper account with that username.');
+    const leagues=await api('/user/'+user.user_id+'/leagues/nfl/'+SEASON);
+    if(!leagues.length) throw new Error('That account has no '+SEASON+' NFL leagues.');
+    state.leagues=leagues; state.userId=user.user_id; state.view='pick';
+  }catch(e){
+    state.error=String(e.message).includes('404')
+      ? 'No Sleeper account with that username. Use your username, not your display name.' : e.message;
+  }
+  state.loading=false; render();
+}
+
+async function openLeague(leagueId){
+  state.loading=true; state.error=null; state.view='board'; render();
+  try{
+    const [league, rosters, users, players]=await Promise.all([
+      api('/league/'+leagueId), api('/league/'+leagueId+'/rosters'),
+      api('/league/'+leagueId+'/users'), loadPlayers()
+    ]);
+    state.league=league; state.allRosters=rosters; state.leagueUsers=users;
+    state.rosterPositions=(league.roster_positions||[]).filter(p=>!['BN','IR','TAXI'].includes(p));
+
+    let uid=state.userId||await sGet(K.uid);
+    let mine=rosters.find(r=>r.owner_id===uid)||rosters[0];
+    state.myRosterId=mine?mine.roster_id:null;
+    state.starters=(mine&&mine.starters)||[];
+    const order=['QB','RB','WR','TE','K','DEF'];
+    state.myPlayers=((mine&&mine.players)||[]).map(id=>{
+      const d=players[id]||['Unknown','?','',''];
+      return { id, n:d[0], p:d[1], t:d[2], inj:d[3] };
+    }).sort((a,b)=>order.indexOf(a.p)-order.indexOf(b.p)||a.n.localeCompare(b.n));
+
+    if(state.userId) sSet(K.uid, state.userId);
+    sSet(K.league, leagueId);
+
+    const sch=await loadSchedule(state.week||1);
+    state.games=sch.games;
+
+    // matchup
+    try{
+      const ms=await api('/league/'+leagueId+'/matchups/'+(state.week||1));
+      const me=ms.find(m=>m.roster_id===state.myRosterId);
+      if(me){
+        const opp=ms.find(m=>m.matchup_id===me.matchup_id && m.roster_id!==me.roster_id);
+        const nameFor=rid=>{
+          const r=rosters.find(x=>x.roster_id===rid); if(!r) return 'Opponent';
+          const u=users.find(x=>x.user_id===r.owner_id);
+          return (u&&((u.metadata&&u.metadata.team_name)||u.display_name))||'Opponent';
+        };
+        state.matchup={ mine:me.points||0, theirs:opp?(opp.points||0):null,
+                        myName:nameFor(state.myRosterId), theirName:opp?nameFor(opp.roster_id):'Bye' };
+      }
+    }catch(e){ state.matchup=null; }
+
+    await detectInjuryChanges();
+    await loadWeekData();
+    startWatcher();
+  }catch(e){ state.error='Could not load that league: '+e.message; }
+  state.loading=false; render();
+}
+
+async function detectInjuryChanges(){
+  const snapRaw=await sGet(K.inj);
+  const prev=snapRaw?JSON.parse(snapRaw):null;
+  const now={}; state.myPlayers.forEach(p=>now[p.id]=p.inj||'');
+  state.injChanges=[];
+  if(prev){
+    state.myPlayers.forEach(p=>{
+      const was=prev[p.id]; const is=p.inj||'';
+      if(was!==undefined && was!==is){
+        state.injChanges.push({ name:p.n, pos:p.p, from:was||'healthy', to:is||'healthy',
+                                worse: OUT_CODES.includes(is) || (Q_CODES.includes(is)&&!was) });
+      }
+    });
+  }
+  sSet(K.inj, JSON.stringify(now));
+}
+
+async function loadWeekData(){
+  const w=state.week||1;
+  state.notes=(await sGet(K.notes+w))||'';
+  const c=await sGet(K.checks+w); state.checks=c?JSON.parse(c):{};
+  state.tradeNotes=(await sGet(K.trade))||'';
+}
+
+/* lineup logic */
+function slotLabel(s){ return {SUPER_FLEX:'Superflex',FLEX:'Flex',REC_FLEX:'W/T Flex',
+  WRRB_FLEX:'W/R Flex',DEF:'D/ST'}[s]||s; }
+function slotAccepts(slot,pos){
+  if(slot==='SUPER_FLEX') return ['QB','RB','WR','TE'].includes(pos);
+  if(slot==='FLEX'||slot==='WRRB_FLEX') return ['RB','WR','TE'].includes(pos);
+  if(slot==='REC_FLEX') return ['WR','TE'].includes(pos);
+  return slot===pos;
+}
+function statusOf(p){
+  if(!p) return { code:'empty', label:'Open', bad:true };
+  if(onBye(p.t)) return { code:'bye', label:'BYE', bad:true };
+  if(OUT_CODES.includes(p.inj)) return { code:'out', label:p.inj.toUpperCase(), bad:true };
+  if(p.inj) return { code:'q', label:p.inj.substring(0,4).toUpperCase(), bad:false, warn:true };
+  return { code:'ok', label:'', bad:false };
+}
+function buildBays(){
+  const byId={}; state.myPlayers.forEach(p=>byId[p.id]=p);
+  const used=new Set();
+  const bays=state.rosterPositions.map((slot,i)=>{
+    const sid=state.starters[i];
+    if(sid && sid!=='0' && byId[sid] && !used.has(sid)){ used.add(sid); return {slot, player:byId[sid]}; }
+    return {slot, player:null};
+  });
+  bays.forEach(b=>{
+    if(b.player) return;
+    const pick=state.myPlayers.find(p=>!used.has(p.id) && slotAccepts(b.slot,p.p) && !statusOf(p).bad)
+             || state.myPlayers.find(p=>!used.has(p.id) && slotAccepts(b.slot,p.p));
+    if(pick){ used.add(pick.id); b.player=pick; }
+  });
+  bays.forEach(b=>b.status=statusOf(b.player));
+  return { bays, benched:state.myPlayers.filter(p=>!used.has(p.id)) };
+}
+function swapSuggestions(bays, benched){
+  const out=[];
+  bays.forEach(b=>{
+    if(!b.status.bad) return;
+    const fix=benched.find(p=>slotAccepts(b.slot,p.p) && !statusOf(p).bad && !out.some(o=>o.in.id===p.id));
+    if(fix) out.push({ slot:b.slot, out:b.player, in:fix });
+  });
   return out;
 }
-function counts(){
-  const c={QB:0,RB:0,WR:0,TE:0};
-  BOARD.forEach(p=>{ if(S.taken[p.name]==="mine") c[p.pos]++; });
-  return c;
-}
-function renderClock(){
-  const drafted=Object.keys(S.taken).length;
-  const round=Math.floor(drafted/S.teams)+1;
-  const c=counts(), mine=S.mine.length;
-  document.getElementById("clockMain").textContent=`Round ${round} · ${mine} on your roster`;
-  const picks=myPicks();
-  const next=picks.find(p=>p>drafted);
-  document.getElementById("clockSub").textContent = S.slot
-    ? (next?`your next pick is ${next}, ${next-drafted} away`:"draft complete")
-    : "set your slot in Plan";
 
-  const qbLeftTop=BOARD.filter(p=>p.pos==="QB"&&p.tier<=3&&!S.taken[p.name]).length;
-  const d=document.getElementById("directive");
-  let msg,cls;
-  if(c.QB===0 && round>=4){ msg=`No quarterback yet in round ${round}. ${qbLeftTop} startable ones left. Take one now.`; cls="urgent"; }
-  else if(c.QB<2 && round>=6){ msg=`You need a second quarterback. ${qbLeftTop} left in the top three tiers.`; cls="urgent"; }
-  else if(c.QB<2 && qbLeftTop<=4 && qbLeftTop>0){ msg=`Only ${qbLeftTop} startable quarterbacks left. The run is on.`; cls="urgent"; }
-  else if(c.QB<2){ msg=`${qbLeftTop} startable quarterbacks on the board. You have ${c.QB} of the two you need.`; cls=""; }
-  else if(c.RB<2||c.WR<3){ msg=`Quarterbacks handled. Fill ${c.RB<2?"running back":"receiver"} next.`; cls="calm"; }
-  else if(!c.TE){ msg="Lineup is nearly set. Grab a tight end, then take swings."; cls="calm"; }
-  else { msg="Starters are covered. Draft upside and handcuff your best back late."; cls="calm"; }
-  d.textContent=msg; d.className=cls;
+/* alerts */
+function buildAlerts(){
+  const {bays, benched}=buildBays();
+  const a=[];
+  bays.filter(b=>!b.player).forEach(b=>a.push({lvl:'bad',
+    t:slotLabel(b.slot)+' bay is empty', d:'Sleeper has nobody assigned here. It scores zero.'}));
+  bays.filter(b=>b.player&&b.status.code==='bye').forEach(b=>a.push({lvl:'bad',
+    t:b.player.n+' is on bye', d:'Starting in your '+slotLabel(b.slot)+' bay and does not play this week.'}));
+  bays.filter(b=>b.player&&b.status.code==='out').forEach(b=>a.push({lvl:'bad',
+    t:b.player.n+' is '+b.player.inj, d:'Starting in your '+slotLabel(b.slot)+' bay. Replace before kickoff.'}));
+  bays.filter(b=>b.player&&b.status.code==='q').forEach(b=>a.push({lvl:'warn',
+    t:b.player.n+' is '+b.player.inj, d:'Check the inactive report about 90 minutes before their kickoff.'}));
+  state.injChanges.forEach(c=>a.push({lvl:c.worse?'bad':'info',
+    t:c.name+': '+c.from+' → '+(c.to||'healthy'), d:'Status changed since you last opened this page.'}));
+  const swaps=swapSuggestions(bays,benched);
+  swaps.forEach(s=>a.push({lvl:'info', t:'Swap in '+s.in.n,
+    d:'Healthy and playing. Fills your '+slotLabel(s.slot)+' bay in place of '+(s.out?s.out.n:'nobody')+'.'}));
+  return a;
 }
 
-/* ---------------- team ---------------- */
-function myPlayers(){
-  if(T.roster.length) return T.roster;
-  return BOARD.filter(p=>S.taken[p.name]==="mine")
-    .map(p=>({name:p.name,pos:p.pos,team:p.team,injury:null}));
-}
-function renderTeam(){
-  const pool=myPlayers().slice();
-  const live=n=>PLAYERS?PLAYERS[n.toLowerCase()]:null;
-  const take=pos=>{ const i=pool.findIndex(p=>p.pos===pos); return i<0?null:pool.splice(i,1)[0]; };
-  const slots=[["QB","QB"],["RB","RB"],["RB","RB"],["WR","WR"],["WR","WR"],["WR","WR"],["TE","TE"]];
-  let html="";
-  slots.forEach(([lbl,pos])=>{ html+=slotRow(lbl,take(pos),live); });
-  const flex=(()=>{const i=pool.findIndex(p=>["RB","WR","TE"].includes(p.pos));return i<0?null:pool.splice(i,1)[0];})();
-  html+=slotRow("FLEX",flex,live);
-  const sf=(()=>{const i=pool.findIndex(p=>["QB","RB","WR","TE"].includes(p.pos));return i<0?null:pool.splice(i,1)[0];})();
-  html+=slotRow("SUPERFLEX",sf,live);
-  document.getElementById("lineup").innerHTML=html;
-  document.getElementById("bench").innerHTML = pool.length
-    ? pool.map(p=>`<div class="slot"><span class="lbl">${p.pos}</span><span class="val">${esc(p.name)}${injTag(live(p.name)||p)}</span></div>`).join("")
-    : "<p>Nothing yet.</p>";
-}
-function injTag(o){ const s=o&&(o.injury_status||o.injury); return s?`<span class="flag">${esc(s)}</span>`:""; }
-function slotRow(lbl,p,live){
-  if(!p) return `<div class="slot"><span class="lbl">${lbl}</span><span class="val empty">open</span></div>`;
-  const l=live?live(p.name):null;
-  const team=(l&&l.team)||p.team||"";
-  return `<div class="slot"><span class="lbl">${lbl}</span><span class="val">${esc(p.name)} <span class="mini">${team}</span>${injTag(l||p)}</span></div>`;
+/* trade signals */
+function tradeSignals(){
+  const teams=(state.league&&state.league.total_rosters)||12;
+  const qb=state.myPlayers.filter(p=>p.p==='QB');
+  const need={}; state.rosterPositions.forEach(s=>{ need[s]=(need[s]||0)+1; });
+  const count=p=>state.myPlayers.filter(x=>x.p===p).length;
+  const sflex=state.rosterPositions.filter(s=>s==='SUPER_FLEX').length;
+  const qbSlots=(need.QB||0)+sflex;
+
+  const sig=[];
+  if(qb.length>=qbSlots+1) sig.push({h:'Quarterback',n:qb.length,cls:'good',
+    d:'You carry '+qb.length+' for '+qbSlots+' slots. That spare is the most valuable trade chip on your roster once a rival loses a starter — hold it until someone is desperate, not before.'});
+  else if(qb.length===qbSlots) sig.push({h:'Quarterback',n:qb.length,cls:'',
+    d:'Exactly enough. One injury and you are starting a flex player in the superflex bay. A cheap third QB is worth more than a fourth receiver.'});
+  else sig.push({h:'Quarterback',n:qb.length,cls:'hot',
+    d:'Short of your '+qbSlots+' slots. This is the emergency and outranks every other roster decision.'});
+
+  const rb=count('RB'), wr=count('WR');
+  const rbNeed=(need.RB||0), wrNeed=(need.WR||0);
+  sig.push({h:'Running back',n:rb,cls: rb<=rbNeed?'hot':(rb>=rbNeed+3?'good':''),
+    d: rb<=rbNeed ? 'No cushion behind your starters. One injury forces a waiver scramble.'
+      : rb>=rbNeed+3 ? 'Deep enough to package two mid pieces for one better starter.'
+      : 'Reasonable depth. Nothing forced here.'});
+  sig.push({h:'Wide receiver',n:wr,cls: wr<=wrNeed?'hot':(wr>=wrNeed+3?'good':''),
+    d: wr<=wrNeed ? 'Thin. Bye weeks will hurt before injuries do.'
+      : wr>=wrNeed+3 ? 'Surplus you can convert. Two flex receivers rarely beat one real starter.'
+      : 'Reasonable depth. Nothing forced here.'});
+
+  const hurt=state.myPlayers.filter(p=>OUT_CODES.includes(p.inj));
+  return { sig, hurt, teams };
 }
 
-/* ---------------- plan ---------------- */
-function renderPlan(){
-  const drafted=Object.keys(S.taken).length;
-  const picks=myPicks();
-  document.getElementById("pickList").innerHTML = picks.length
-    ? picks.slice(0,14).map((p,i)=>`<span class="pill">R${i+1} · pick ${p}${p<=drafted?" ✓":""}</span>`).join("")
-    : "Enter a slot to see which picks are yours.";
-  const total=BOARD.filter(p=>p.pos==="QB").length;
-  const left=BOARD.filter(p=>p.pos==="QB"&&!S.taken[p.name]).length;
-  const startable=BOARD.filter(p=>p.pos==="QB"&&p.tier<=4&&!S.taken[p.name]).length;
-  document.getElementById("qbGauge").style.width=Math.round(left/total*100)+"%";
-  document.getElementById("qbSupply").textContent=
-    `${left} of ${total} quarterbacks on the board. ${startable} of them start for a contender. Your league needs ${S.teams*2} weekly.`;
-}
-
-/* ---------------- sleeper ---------------- */
-const api=p=>fetch("https://api.sleeper.app/v1"+p).then(r=>{if(!r.ok)throw new Error(r.status);return r.json();});
-function setStatus(t,err){ const e=document.getElementById("syncStatus"); e.textContent=t; e.className="status"+(err?" err":""); }
-
-async function ensurePlayers(){
-  if(PLAYERS) return PLAYERS;
-  setStatus("Loading the NFL player list. This one is big, give it a moment.");
-  const raw=await api("/players/nfl");
-  PLAYERS={}; window.__RAW=raw;
-  for(const id in raw){
-    const p=raw[id];
-    if(!p.full_name||!["QB","RB","WR","TE"].includes(p.position)) continue;
-    p.__id=id;
-    PLAYERS[p.full_name.toLowerCase()]=p;
-  }
-  setStatus("Player list loaded. Teams and injury flags are live now.");
-  renderBoard(); renderTeam();
-  return PLAYERS;
-}
-document.getElementById("loadLeagues").onclick=async()=>{
-  const u=document.getElementById("uname").value.trim();
-  if(!u){ setStatus("Enter your Sleeper username first.",1); return; }
+/* notifications */
+async function enableNotifications(){
+  if(!('Notification' in window)){ state.notifyState='unsupported'; render(); return; }
   try{
-    setStatus("Looking you up.");
-    const user=await api("/user/"+encodeURIComponent(u));
-    if(!user||!user.user_id) throw new Error("no user");
-    T.username=u; T.userId=user.user_id;
-    const lgs=await api(`/user/${user.user_id}/leagues/nfl/2026`);
-    if(!lgs.length){ setStatus("No 2026 leagues on that account.",1); return; }
-    const sel=document.getElementById("leagueSel");
-    sel.innerHTML=lgs.map(l=>`<option value="${l.league_id}">${esc(l.name)} · ${l.total_rosters} teams</option>`).join("");
-    T.leagues=lgs; saveTeam();
-    setStatus(`Found ${lgs.length} league${lgs.length>1?"s":""}. Pick one and load the roster.`);
-  }catch(e){ setStatus("Could not reach Sleeper. Check the username, or the connection is blocked.",1); }
-};
-document.getElementById("loadRoster").onclick=async()=>{
-  const lid=document.getElementById("leagueSel").value;
-  if(!lid||lid.length<8){ setStatus("Find your leagues first.",1); return; }
-  try{
-    await ensurePlayers();
-    setStatus("Pulling the roster.");
-    const rosters=await api(`/league/${lid}/rosters`);
-    const mine=rosters.find(r=>r.owner_id===T.userId);
-    if(!mine){ setStatus("That league has no roster under your account yet.",1); return; }
-    const raw=window.__RAW||{};
-    T.leagueId=lid;
-    T.roster=(mine.players||[]).map(id=>{
-      const p=raw[id]; if(!p) return null;
-      return {name:p.full_name||id,pos:p.position,team:p.team,injury:p.injury_status||null};
-    }).filter(Boolean).filter(p=>["QB","RB","WR","TE"].includes(p.pos));
-    saveTeam(); renderTeam();
-    setStatus(`Loaded ${T.roster.length} players. This is now your team of record.`);
-  }catch(e){ setStatus("Roster load failed. Try again in a moment.",1); }
-};
-
-/* search any player */
-let searchTimer;
-document.getElementById("searchBox").oninput=e=>{
-  clearTimeout(searchTimer);
-  const q=e.target.value.trim().toLowerCase();
-  const out=document.getElementById("searchResults");
-  if(q.length<3){ out.innerHTML=""; return; }
-  searchTimer=setTimeout(async()=>{
-    if(!PLAYERS){ out.innerHTML='<p class="mini">Loading the player list first.</p>'; await ensurePlayers(); }
-    const hits=Object.values(PLAYERS).filter(p=>p.full_name.toLowerCase().includes(q)&&p.team).slice(0,8);
-    out.innerHTML=hits.length? hits.map(p=>
-      `<div class="slot"><span class="pos ${p.position}">${p.position}</span>
-       <span class="val">${esc(p.full_name)} <span class="mini">${p.team||""}</span></span>
-       <button class="btn" data-add="${esc(p.full_name)}" data-pos="${p.position}" data-team="${p.team||""}">Add</button></div>`
-    ).join("") : '<p class="mini">No match.</p>';
-    out.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>{
-      T.roster.push({name:b.dataset.add,pos:b.dataset.pos,team:b.dataset.team,injury:null});
-      saveTeam(); renderTeam();
-      b.textContent="Added"; b.disabled=true;
+    const p=await Notification.requestPermission();
+    state.notifyState=p; await sSet(K.notify,p);
+  }catch(e){ state.notifyState='blocked'; }
+  render();
+}
+function fire(title, body){
+  if(state.notifyState!=='granted') return;
+  try{ new Notification(title,{body}); }catch(e){}
+}
+let watcher=null;
+function startWatcher(){
+  if(watcher) clearInterval(watcher);
+  watcher=setInterval(()=>{
+    const {bays}=buildBays();
+    const now=Date.now();
+    bays.forEach(b=>{
+      if(!b.player||!b.status.bad) return;
+      const g=gameFor(b.player.t); if(!g) return;
+      const mins=(g.kick.getTime()-now)/60000;
+      if(mins>0 && mins<75 && !b._fired){
+        b._fired=true;
+        fire('Lineup problem', b.player.n+' kicks off in '+Math.round(mins)+' min and is '+(b.status.label||'unavailable')+'.');
+      }
     });
-  },250);
-};
+  }, 60000);
+}
 
-/* ---------------- chrome ---------------- */
-document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{
-  document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("on",x===b));
-  document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("on",p.id==="pane-"+b.dataset.p));
-  document.getElementById("filters").style.display = b.dataset.p==="board"?"flex":"none";
-  window.scrollTo(0,0);
-});
-document.querySelectorAll("#filters .chip[data-f]").forEach(c=>c.onclick=()=>{
-  document.querySelectorAll("#filters .chip[data-f]").forEach(x=>x.classList.toggle("on",x===c));
-  S.filter=c.dataset.f; saveDraft(); renderBoard();
-});
-document.getElementById("hideTaken").onclick=e=>{
-  S.hideTaken=!S.hideTaken;
-  e.target.classList.toggle("on",S.hideTaken);
-  e.target.textContent=S.hideTaken?"Hide drafted":"Show drafted";
-  saveDraft(); renderBoard();
-};
-document.getElementById("teams").oninput=e=>{ S.teams=Math.max(4,Math.min(16,+e.target.value||12)); saveDraft(); renderClock(); renderPlan(); };
-document.getElementById("slot").oninput=e=>{ S.slot=+e.target.value||null; saveDraft(); renderClock(); renderPlan(); };
-document.getElementById("notes").oninput=e=>{
-  T.notes=e.target.value; saveTeam();
-  document.getElementById("noteStatus").textContent="Saved.";
-  setTimeout(()=>document.getElementById("noteStatus").textContent="",1200);
-};
-document.getElementById("resetBtn").onclick=()=>{
-  if(!confirm("Clear every mark on the board?")) return;
-  S.taken={}; S.mine=[]; S.hist=[]; saveDraft();
-  renderBoard(); renderClock(); renderTeam(); renderPlan();
-};
+/* render */
+const stage=document.getElementById('stage');
+const tabsEl=document.getElementById('tabs');
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmtKick=d=>d.toLocaleString(undefined,{weekday:'short',hour:'numeric',minute:'2-digit'});
 
-/* ---------------- boot ---------------- */
-(async()=>{
-  const d=await load(KEY_DRAFT); if(d) S=Object.assign(S,d);
-  const t=await load(KEY_TEAM); if(t) T=Object.assign(T,t);
-  document.getElementById("teams").value=S.teams;
-  if(S.slot) document.getElementById("slot").value=S.slot;
-  document.getElementById("notes").value=T.notes||"";
-  document.getElementById("uname").value=T.username||"";
-  if(T.leagues&&T.leagues.length){
-    document.getElementById("leagueSel").innerHTML=T.leagues.map(l=>`<option value="${l.league_id}"${l.league_id===T.leagueId?" selected":""}>${esc(l.name)} · ${l.total_rosters} teams</option>`).join("");
+function render(){
+  document.getElementById('mastWeek').innerHTML =
+    state.week ? 'Regular season<b>WK '+state.week+'</b>' : 'Season<b>&mdash;</b>';
+  document.getElementById('mastMeta').textContent =
+    state.league ? state.league.name+' · '+(state.league.total_rosters||'?')+' teams' : 'Superflex · Sleeper';
+
+  if(state.view==='connect'){ tabsEl.style.display='none'; return renderConnect(); }
+  if(state.view==='pick'){ tabsEl.style.display='none'; return renderPick(); }
+  if(state.loading){ tabsEl.style.display='none'; return renderSkeleton(); }
+  if(state.error){ tabsEl.style.display='none';
+    stage.innerHTML='<div class="sect"><div class="err">'+esc(state.error)+'</div>'+
+      '<button class="ghost" id="rs" style="margin-top:16px">Start over</button></div>';
+    document.getElementById('rs').onclick=()=>{ state.view='connect'; state.error=null; render(); };
+    return;
   }
-  document.querySelectorAll("#filters .chip[data-f]").forEach(c=>c.classList.toggle("on",c.dataset.f===S.filter));
-  const ht=document.getElementById("hideTaken");
-  ht.classList.toggle("on",S.hideTaken); ht.textContent=S.hideTaken?"Hide drafted":"Show drafted";
-  renderBoard(); renderClock(); renderTeam(); renderPlan();
-})();
+
+  const alertCount=buildAlerts().filter(a=>a.lvl==='bad').length;
+  tabsEl.style.display='flex';
+  const defs=[['week','This week',alertCount],['roster','Roster'],['schedule','Schedule'],['trade','Trade desk'],['notes','Notes']];
+  tabsEl.innerHTML=defs.map(([id,label,dot])=>
+    `<button class="tab ${state.tab===id?'on':''}" data-tab="${id}">${label}${dot?'<span class="dot"></span>':''}</button>`).join('');
+  tabsEl.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{ state.tab=b.dataset.tab; render(); });
+
+  if(state.tab==='week') renderWeek();
+  else if(state.tab==='roster') renderRoster();
+  else if(state.tab==='schedule') renderSchedule();
+  else if(state.tab==='trade') renderTrade();
+  else renderNotes();
+  renderFoot();
+}
+
+function renderFoot(){
+  stage.insertAdjacentHTML('beforeend',
+    `<div class="foot"><span>${state.scheduleOk?'Schedule live':'Schedule unavailable'}</span>
+     <button class="ghost small" id="rf">Refresh</button>
+     <button class="ghost small" id="sw">Switch league</button></div>`);
+  document.getElementById('rf').onclick=()=>{ const id=state.league&&state.league.league_id; if(id) openLeague(id); };
+  document.getElementById('sw').onclick=async()=>{ await sSet(K.league,''); state.view='connect'; state.league=null; render(); };
+}
+
+function renderWeek(){
+  const {bays}=buildBays();
+  const alerts=buildAlerts();
+  const m=state.matchup;
+  const notifyLine = state.notifyState==='granted'
+    ? '<b>Alerts on.</b> While this page is open you will get a nudge when a player with a problem is about to kick off.'
+    : state.notifyState==='denied' || state.notifyState==='blocked'
+    ? '<b>Alerts blocked.</b> Your browser refused permission. The alert list below still works — check it before kickoff.'
+    : state.notifyState==='unsupported'
+    ? '<b>Alerts unavailable here.</b> This browser or frame does not allow notifications. Use the list below.'
+    : '<b>Kickoff alerts.</b> Get warned when a player with a problem is close to kicking off. Only fires while this page is open.';
+
+  stage.innerHTML=`
+    ${m?`<section class="sect">
+      <div class="eyebrow">Week ${state.week} matchup</div>
+      <div class="score">
+        <div class="score-side away"><div class="score-nm">${esc(m.myName)}</div>
+          <div class="score-pt">${m.mine.toFixed(1)}</div></div>
+        <div class="score-vs">VS</div>
+        <div class="score-side"><div class="score-nm">${esc(m.theirName)}</div>
+          <div class="score-pt">${m.theirs===null?'—':m.theirs.toFixed(1)}</div></div>
+      </div>
+    </section>`:''}
+
+    <section class="sect">
+      <div class="eyebrow">Needs attention</div>
+      ${alerts.length?`<div class="alerts">${alerts.map(a=>`
+        <div class="alert ${a.lvl==='warn'?'warn':a.lvl==='info'?'info':''}">
+          <div class="alert-bar"></div>
+          <div><div class="alert-t">${esc(a.t)}</div><div class="alert-d">${esc(a.d)}</div></div>
+        </div>`).join('')}</div>`
+        : `<div class="alerts"><div class="alert info"><div class="alert-bar"></div>
+           <div><div class="alert-t">Nothing needs fixing</div>
+           <div class="alert-d">Every bay is filled with somebody healthy who plays this week.</div></div></div></div>`}
+      <div class="notify" style="margin-top:18px">
+        <div class="notify-t">${notifyLine}</div>
+        ${state.notifyState==='granted'||state.notifyState==='unsupported'?'':
+          '<button id="notifyBtn" class="small">Turn on alerts</button>'}
+      </div>
+    </section>
+
+    <section class="sect">
+      <div class="eyebrow">Starting bays</div>
+      <div class="bays">
+        ${bays.map(b=>{
+          const s=b.status; const g=b.player?gameFor(b.player.t):null;
+          return `<div class="bay ${b.slot==='SUPER_FLEX'&&!s.bad?'sflex':''} ${s.bad?'bad':''} ${b.player?'':'empty'}">
+            <div class="bay-tag">${esc(slotLabel(b.slot))}</div>
+            ${s.label&&s.code!=='empty'?`<div class="bay-flag ${s.warn?'warn':''}">${esc(s.label)}</div>`:''}
+            <div>
+              <div class="bay-name">${b.player?esc(b.player.n):'Open'}</div>
+              <div class="bay-sub">${b.player
+                ? esc(b.player.p+(b.player.t?' · '+b.player.t:'')) + (g?' · '+esc(fmtKick(g.kick)):'')
+                : 'nobody assigned'}</div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </section>
+
+    <section class="sect">
+      <div class="eyebrow">Week ${state.week} checklist</div>
+      <div class="checks" id="checks">
+        ${CHECKS.map((c,i)=>`<div class="check ${state.checks[i]?'done':''}" data-i="${i}">
+          <div class="check-box"></div><div class="check-text">${esc(c)}</div></div>`).join('')}
+      </div>
+    </section>`;
+
+  const nb=document.getElementById('notifyBtn'); if(nb) nb.onclick=enableNotifications;
+  wireChecks();
+}
+
+function renderRoster(){
+  const {bays, benched}=buildBays();
+  const starters=bays.filter(b=>b.player).map(b=>b.player.id);
+  const line=p=>{
+    const s=statusOf(p); const g=gameFor(p.t);
+    const cls = g ? (g.state==='in'?'live':g.state==='post'?'done':'') : '';
+    const when = g ? (g.state==='pre'?fmtKick(g.kick):g.detail||g.state) : (state.scheduleOk?'BYE':'—');
+    return `<div class="row">
+      <div class="row-pos ${esc(p.p)}">${esc(p.p)}</div>
+      <div><div class="row-name">${esc(p.n)}${s.code==='out'?`<span class="tagpill t-out">${esc(p.inj)}</span>`:
+        s.code==='q'?`<span class="tagpill t-q">${esc(p.inj)}</span>`:
+        s.code==='bye'?'<span class="tagpill t-bye">BYE</span>':''}</div>
+        <div class="row-sub">${esc(p.t||'FA')}${g?' '+(g.home?'vs':'at')+' '+esc(g.opp):''}</div></div>
+      <div class="row-right ${cls}">${esc(when)}</div>
+    </div>`;
+  };
+  stage.innerHTML=`
+    <section class="sect">
+      <div class="eyebrow">Starting (${starters.length})</div>
+      <div class="rows">${bays.filter(b=>b.player).map(b=>line(b.player)).join('')||'<div class="skel-row">Nobody assigned.</div>'}</div>
+    </section>
+    <section class="sect">
+      <div class="eyebrow">Bench (${benched.length})</div>
+      <div class="rows">${benched.map(line).join('')||'<div class="skel-row" style="color:var(--muted)">Bench is empty.</div>'}</div>
+    </section>`;
+}
+
+function renderSchedule(){
+  const withGames=state.myPlayers.map(p=>({p, g:gameFor(p.t)}));
+  const playing=withGames.filter(x=>x.g).sort((a,b)=>a.g.kick-b.g.kick);
+  const byes=withGames.filter(x=>!x.g);
+  const groups={};
+  playing.forEach(x=>{
+    const key=x.g.kick.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});
+    (groups[key]=groups[key]||[]).push(x);
+  });
+  stage.innerHTML=`
+    <section class="sect">
+      <div class="eyebrow">Week ${state.week} kickoffs</div>
+      ${!state.scheduleOk?`<div class="err">Could not load the NFL schedule feed, so kickoff times and bye detection are unavailable this session. Everything else still works.</div>`:''}
+      ${Object.keys(groups).length?Object.entries(groups).map(([day,list])=>`
+        <div class="day"><div class="day-h">${esc(day)}</div>
+          <div class="rows">${list.map(({p,g})=>`
+            <div class="row">
+              <div class="row-pos ${esc(p.p)}">${esc(p.p)}</div>
+              <div><div class="row-name">${esc(p.n)}${p.inj?`<span class="tagpill ${OUT_CODES.includes(p.inj)?'t-out':'t-q'}">${esc(p.inj)}</span>`:''}</div>
+                <div class="row-sub">${esc(p.t)} ${g.home?'vs':'at'} ${esc(g.opp)}</div></div>
+              <div class="row-right ${g.state==='in'?'live':g.state==='post'?'done':''}">
+                ${esc(g.state==='pre'?g.kick.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'}):(g.detail||g.state))}
+              </div>
+            </div>`).join('')}</div>
+        </div>`).join(''):''}
+      ${byes.length&&state.scheduleOk?`
+        <div class="day"><div class="day-h">On bye</div>
+          <div class="rows">${byes.map(({p})=>`
+            <div class="row"><div class="row-pos ${esc(p.p)}">${esc(p.p)}</div>
+              <div class="row-name">${esc(p.n)}</div>
+              <div class="row-right">${esc(p.t||'FA')}</div></div>`).join('')}</div>
+        </div>`:''}
+    </section>`;
+}
+
+function renderTrade(){
+  const {sig, hurt}=tradeSignals();
+  stage.innerHTML=`
+    <section class="sect">
+      <div class="eyebrow">Positional read</div>
+      <div class="verdicts">
+        ${sig.map(s=>`<div class="vc"><div class="vc-h">${esc(s.h)}</div>
+          <div class="vc-n ${s.cls}">${s.n}</div><div class="vc-d">${esc(s.d)}</div></div>`).join('')}
+      </div>
+      <div class="help" style="margin-top:12px">Counts come from your live roster. The read is about roster shape, not player value — for who specifically to move, ask Claude for a weekly refresh.</div>
+    </section>
+
+    <section class="sect cols">
+      <div>
+        <div class="eyebrow">Hold or move</div>
+        ${hurt.length?`<div class="rows">${hurt.map(p=>`
+          <div class="row"><div class="row-pos ${esc(p.p)}">${esc(p.p)}</div>
+            <div><div class="row-name">${esc(p.n)}<span class="tagpill t-out">${esc(p.inj)}</span></div>
+              <div class="row-sub">Decide: stash through it, or sell before the market prices it in</div></div>
+            <div class="row-right">${esc(p.t||'')}</div></div>`).join('')}</div>`
+          : `<div class="rows"><div class="skel-row" style="color:var(--muted)">Nobody on your roster is currently ruled out. Nothing forced.</div></div>`}
+        <div class="help" style="margin-top:12px">A player who is out for one or two weeks is usually a hold — the discount you would accept is steeper than the games you would miss. Multi-week absences are where selling starts to make sense.</div>
+      </div>
+      <div>
+        <div class="eyebrow">Trade notes</div>
+        <textarea id="tnotes" placeholder="Who you are shopping, what you would accept, which manager is desperate at QB…">${esc(state.tradeNotes)}</textarea>
+        <div class="saved" id="tsaved"></div>
+      </div>
+    </section>`;
+  const ta=document.getElementById('tnotes'), tag=document.getElementById('tsaved');
+  let t; ta.oninput=()=>{ clearTimeout(t); t=setTimeout(async()=>{
+    state.tradeNotes=ta.value; const ok=await sSet(K.trade,ta.value);
+    tag.textContent=ok?'Saved':'Could not save'; setTimeout(()=>tag.textContent='',1600); },600); };
+}
+
+function renderNotes(){
+  stage.innerHTML=`
+    <section class="sect cols">
+      <div>
+        <div class="eyebrow">Claude's week ${BRIEF.week||state.week} brief</div>
+        ${BRIEF.items.length?`<div class="alerts">${BRIEF.items.map(i=>`
+          <div class="alert ${i.lvl==='warn'?'warn':'info'}"><div class="alert-bar"></div>
+          <div><div class="alert-t">${esc(i.t)}</div><div class="alert-d">${esc(i.d)}</div></div></div>`).join('')}</div>
+          <div class="help" style="margin-top:10px">Last written: ${esc(BRIEF.updated)}</div>`
+          : `<div class="rows"><div class="skel-row" style="color:var(--muted)">
+             No brief written yet. Ask Claude to "update me for week ${state.week}" and this fills with
+             start/sit leans, waiver targets and trade reads for your actual roster.</div></div>`}
+      </div>
+      <div>
+        <div class="eyebrow">Your week ${state.week} notes</div>
+        <textarea id="notes" placeholder="Leans, reminders, who you are watching…">${esc(state.notes)}</textarea>
+        <div class="saved" id="nsaved"></div>
+      </div>
+    </section>`;
+  const ta=document.getElementById('notes'), tag=document.getElementById('nsaved');
+  let t; ta.oninput=()=>{ clearTimeout(t); t=setTimeout(async()=>{
+    state.notes=ta.value; const ok=await sSet(K.notes+(state.week||1),ta.value);
+    tag.textContent=ok?'Saved':'Could not save'; setTimeout(()=>tag.textContent='',1600); },600); };
+}
+
+function wireChecks(){
+  stage.querySelectorAll('.check').forEach(el=>{
+    el.onclick=async()=>{ const i=el.dataset.i; state.checks[i]=!state.checks[i];
+      el.classList.toggle('done'); await sSet(K.checks+(state.week||1),JSON.stringify(state.checks)); };
+  });
+}
+
+function renderConnect(){
+  stage.innerHTML=`
+    <div class="connect">
+      <div>
+        <div class="eyebrow">Connect</div>
+        <div class="field"><label for="u">Sleeper username</label>
+          <input id="u" placeholder="your_username" autocomplete="off" />
+          <div class="help">Your login username, not your display name.</div></div>
+        <button id="go" ${state.loading?'disabled':''}>${state.loading?'Looking…':'Find my leagues'}</button>
+        ${state.error?`<div class="err">${esc(state.error)}</div>`:''}
+      </div>
+      <div class="connect-aside">
+        <div class="eyebrow">In season</div>
+        <p>Pulls your <strong>live roster and matchup</strong> from Sleeper, then checks every starting bay against the real NFL schedule.</p>
+        <p>Anything broken — an empty bay, a starter on bye, somebody ruled out — surfaces at the top of the week view instead of waiting for you to notice.</p>
+        <p>Injury status changes are <strong>diffed against your last visit</strong>, so you see what moved rather than a static list.</p>
+      </div>
+    </div>`;
+  const i=document.getElementById('u');
+  const go=()=>i.value.trim()&&findUser(i.value);
+  document.getElementById('go').onclick=go;
+  i.onkeydown=e=>{ if(e.key==='Enter') go(); };
+  i.focus();
+}
+
+function renderPick(){
+  stage.innerHTML=`<div class="sect" style="max-width:620px">
+    <div class="eyebrow">Choose a league</div>
+    <div class="leaguelist">${state.leagues.map(l=>`
+      <button data-id="${esc(l.league_id)}"><span class="lg-name">${esc(l.name)}</span>
+      <span class="lg-fmt">${l.total_rosters} tm · ${(l.roster_positions||[]).includes('SUPER_FLEX')?'Superflex':'1QB'}</span>
+      </button>`).join('')}</div></div>`;
+  stage.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>openLeague(b.dataset.id));
+}
+
+function renderSkeleton(){
+  stage.innerHTML=`<section class="sect"><div class="eyebrow">Loading your team</div>
+    <div class="bays">${Array.from({length:9},()=>`<div class="bay">
+      <div class="skel" style="width:34%;height:9px"></div>
+      <div><div class="skel" style="width:74%;height:17px;margin-bottom:6px"></div>
+      <div class="skel" style="width:46%;height:9px"></div></div></div>`).join('')}</div>
+    <div class="sect"><div class="rows">${Array.from({length:6},()=>
+      `<div class="skel-row"><div class="skel" style="width:${40+Math.round(Math.random()*35)}%"></div></div>`).join('')}</div></div>
+  </section>`;
+}
+
+boot();
 </script>
-</body>
-</html>
